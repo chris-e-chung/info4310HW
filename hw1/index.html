@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="scripts\d3-geo-scale-bar\d3-geo-scale-bar.js"></script>
+
+
+    <title>Trees</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+    <header id="header" class="flexrow">
+        <a href="index.html">
+            <h1>
+                HW1: Trees of S.F.
+            </h1>
+        </a>
+
+        <div>
+            <a href="https://www.youtube.com/watch?v=VKMw2it8dQY">
+                <h2>
+                    Chris C.
+                </h2>
+            </a>
+        </div>
+    </header>
+
+    <div id="hero">
+        <div id="link_container">
+            <div id="data_links">
+                <a href="https://data.census.gov/table/ACSST5Y2022.S1903?q=median%20income&g=860XX00US94102,94103,94104,94105,94107,94108,94109,94110,94111,94112,94114,94115,94116,94117,94118,94121,94122,94123,94124,94127,94128,94129,94130,94131,94132,94133,94134,94158,94188
+                ">
+                    Median Income Census Data
+                </a>
+
+                <a href="https://www.sfgov.org/sfc/sites/default/files/Asthma/2016%20CHNA%20Asthma%20(1).pdf">
+                    SF Asthma Data
+                </a>
+
+                <a href="https://data.sfgov.org/City-Infrastructure/Street-Tree-List/tkzw-k3nq">
+                    SF Tree Dataset
+                </a>
+            </div>
+            <div>
+                <a href="https://mymaps.google.com">
+                    Image Courtesy of Google Maps
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <h2><em>Clever Title</em> : Visualizing S.F.'s Trees and Health Trends</h2>
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ultricies ut nisi tincidunt fermentum.
+            Pellentesque ac leo ut ante commodo pharetra at sed libero.
+        </p>
+        <p>
+            Phasellus vulputate diam diam, nec luctus neque varius vitae. Fusce malesuada venenatis varius. Pellentesque
+            rutrum metus nec sapien hendrerit commodo. Integer bibendum lobortis enim, sit amet pulvinar ex fringilla
+            non. Morbi gravida eget orci in convallis. Sed vestibulum ullamcorper venenatis. Suspendisse magna quam,
+            interdum sed luctus porta, lobortis et leo. Ut at bibendum felis. Sed augue tortor, sagittis vel felis ut,
+            consectetur gravida augue. Mauris venenatis pharetra sapien a sollicitudin. Pellentesque porta quam aliquam
+            magna mollis, a rhoncus metus tempus.
+        </p>
+        <hr>
+        <h3>
+            Basic Tree Plot
+        </h3>
+        <p>
+            Interdum et malesuada fames ac ante ipsum primis in faucibus. Nulla vel volutpat odio. Maecenas vestibulum
+            placerat dui ac vestibulum.
+            Aliquam semper, metus in faucibus viverra, quam enim placerat massa, vitae ultrices ligula metus in ipsum.
+            Suspendisse potenti. Nam in enim nec lectus blandit vehicula.
+        </p>
+        <div id="treeDiv">
+            <svg id="mainTree" width="800" height="700" z-index="1"></svg>
+            <div>
+                <svg id="privateTree" width="400" height="400" z-index="0"></svg>
+                <svg id="nonPrivateTree" width="400" height="400" z-index="0"></svg>
+            </div>
+        </div>
+        <script id="basicplot_script">
+
+            function basicTreePlots(id, dataFilterFunction, color, r) {
+                var svg = d3.select(`#${id}`);
+                var mapWidth = svg.attr("width");
+                var mapHeight = svg.attr("height");
+
+                var map = svg.append("g");
+
+                var basicPlotMaker = async function () {
+                    var sf = await d3.json('data/SF-Neighborhoods.geo.json');
+                    console.log(sf);
+
+                    var neighborhoods = topojson.feature(sf, sf.objects.SFNeighborhoods);
+
+                    var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], neighborhoods);
+                    var path = d3.geoPath().projection(projection);
+
+                    map.selectAll("path.neighborhood").data(neighborhoods.features)
+                        .join("path")
+                        .attr("class", "neighborhood")
+                        .attr("d", path);
+
+                    var weed = await d3.csv('data/Street_Tree_List-2022-01-30_FILTERED.csv', d3.autoType);
+                    weed = weed.filter( d=> dataFilterFunction(d))
+                    weed.forEach(d => {
+                        d.Position = projection([d.Longitude, d.Latitude]);
+                    });
+                    map.selectAll('circle').data(weed)
+                        .join("circle")
+                        .attr("r", r)
+                        .attr("fill", color)
+                        .attr("cx", d => d.Position[0])
+                        .attr("cy", d => d.Position[1])
+                        .attr("opacity", 0.4)
+
+                    // Scale bar package created by Harry Stevens @ https://github.com/HarryStevens/d3-geo-scale-bar?tab=readme-ov-file
+                    var scaleBar = d3.geoScaleBar()
+                        .projection(projection)
+                        .size([mapWidth, mapHeight])
+                        .units(d3.geoScaleMiles)
+                        .left(0.05)
+                        .top(0.05)
+                        .tickPadding(3)
+                    mapScaleBar = map.append("g")
+                                     .call(scaleBar);
+                    mapScaleBar.selectAll("rect")
+                               .remove();
+                };
+                basicPlotMaker();
+            };
+
+            basicTreePlots("mainTree", () => true, "#00573a", 1.5);
+            basicTreePlots("privateTree", d => d.qCaretaker === 'Private', "#572e00", 1);
+            basicTreePlots("nonPrivateTree", d => d.qCaretaker !== 'Private', "#572e00", 1);
+        </script>
+
+        <h3>
+            Basic Tree Plot
+        </h3>
+        <p>
+            Interdum et malesuada fames ac ante ipsum primis in faucibus. Nulla vel volutpat odio. Maecenas vestibulum
+            placerat dui ac vestibulum.
+            Aliquam semper, metus in faucibus viverra, quam enim placerat massa, vitae ultrices ligula metus in ipsum.
+            Suspendisse potenti. Nam in enim nec lectus blandit vehicula.
+        </p>
+
+    </main>
+
+    <footer>
+
+    </footer>
+</body>
+
+</html>
