@@ -1,0 +1,351 @@
+:root {
+    --grey: #F4F3EE;
+    --purple: #48273F;
+    --burgundy: rgb(120, 0, 0);
+    --neon-green: rgb(22, 245, 41);
+    --padding: 60px;
+}
+
+html,
+body {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    padding: 0;
+    margin: 0;
+    background-color: var(--purple);
+}
+
+.hidden {
+    display: none;
+}
+
+em {
+    color: var(--burgundy);
+}
+
+hr {
+    color: var(--purple);
+    width: 750px;
+    text-align: center;
+    margin: 50px auto;
+}
+
+.header {
+    position: fixed;
+    align-items: center;
+
+    margin: 0 0;
+    padding: 20px var(--padding);
+    width: 100%;
+    height: 75px;
+    background-color: var(--grey);
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+
+    transition: transform 0.3s ease;
+}
+
+
+.header h1,
+h3 {
+    margin: 0;
+}
+
+.header a {
+    text-decoration: none;
+    color: black;
+}
+
+.header a:hover {
+    text-decoration: underline;
+
+}
+
+.header h1 {
+    margin-right: 60px;
+    color: var(--burgundy);
+}
+
+.header ul {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.header ul li {
+    margin-right: 30px;
+}
+
+#header2 {
+    background-color: black;
+    color: white;
+
+    border-bottom: 1px solid white;
+}
+
+#header2 a, #header2 h1 {
+    color: var(--neon-green);
+}
+
+.justifyright {
+    margin-left: auto;
+    align-items: center;
+}
+
+.justifyright picture {
+    background-color: black;
+    border-radius: 15px;
+    width: 27px;
+    height: 27px;
+    display: flex;
+    ;
+    justify-content: center;
+    align-content: center;
+    padding-top: 1px;
+    margin-right: 10px;
+}
+
+
+.justifyright picture img {
+    display: block;
+    width: 25px;
+    height: auto;
+
+}
+
+div#sourceCitation {
+    display: flex;
+    align-items: center;
+    padding-top: 75px;
+    padding-left: var(--padding);
+    background-color: var(--purple);
+    border-bottom: 1px solid rgb(201, 201, 201);
+    color: var(--grey);
+}
+
+div#sourceCitation button {
+    height: 30px;
+    margin-right: 10px;
+    padding: 0 8px;
+    background-color: var(--burgundy);
+    box-shadow: none;
+    border-radius: 5px;
+}
+
+div#sourceCitation button a {
+    color: var(--grey);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a#zynicide {
+    color: var(--grey);
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+a#zynicide:hover {
+    text-decoration: underline;
+}
+
+a#kaggle {
+    color: rgb(0, 203, 230);
+    text-decoration: none;
+}
+
+a#kaggle:hover {
+    text-decoration: underline;
+}
+
+section {
+    padding: 30px calc(var(--padding) * 2);
+}
+
+section#sectionWine {
+    background-color: var(--grey);
+}
+
+div#gradient {
+    background-image: linear-gradient(var(--grey), black);
+    height:200px;
+}
+
+section#sectionPass {
+    background-color: black;
+    padding-top: 200px;
+    height: 1000px;
+}
+
+#sectionPass * {
+    font-family: monospace;
+    color: var(--neon-green);
+}
+
+section#sectionWine img {
+    margin: 20px auto;
+    display: block;
+    padding: 20px;
+
+    border: 2px solid none;
+    border-radius: 5px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
+    background-color: white;
+}
+
+footer {
+    width: 100%;
+    height: 200px;
+    background-color: black;
+}
+
+.flexrow {
+    display: flex;
+    flex-direction: row;
+}
+
+
+.gridlines line {
+    stroke: #bbb;
+}
+
+.gridlines .domain {
+    stroke: none;
+}
+
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 120px;
+    padding: 6px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+.bar {
+    fill-opacity: 0.7;
+}
+
+.legend {
+    font-size: 12px;
+}
+
+#pCredit a {
+    color: var(--burgundy);
+}
+
+div.full-container {
+    display: flex;
+    flex-direction: row;
+    height: 700px;
+}
+
+div.explanation {
+    max-width: 700px;
+    padding: 0px 20px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.map_bars {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 75%;
+    height: 100%;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+    padding-top: 50px;
+
+    flex-grow: 3;
+}
+
+.map_bars * {
+    flex-shrink: 0;
+}
+
+.details_div {
+    width: 25%;
+    height: 800px;
+    flex-grow: 1;
+    overflow-y: auto;
+
+    border: 1px solid white;
+    padding: 20px;
+    margin: 20px;
+
+    scrollbar-color: rgb(10, 148, 21) #060607;
+    scrollbar-width: thin;
+}
+
+.details_div ul li {
+    list-style: inside;
+}
+
+.input-box {
+    border-radius: 50px;
+    border: 1px solid white;
+
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 12px;
+    width: 600px;
+}
+
+.input-box img {
+    height: 20px;
+    width: 20px;
+}
+
+.input-box input {
+    width: 90%;
+    margin-left: 10px;
+    font-size: 16px;
+    border: none;
+    outline: 0;
+    background-color: black;
+}
+
+input#filter-text-val {
+    color: var(--neon-green);
+}
+
+#legend_box {
+    fill: white;
+    stroke: white;
+}
+
+svg#progress text {
+    font-family: monospace;
+    fill: var(--neon-green)
+}
+
+text.legendTitle {
+    fill: var(--neon-green)
+}
+
+g.cell text {
+    fill: var(--neon-green)
+}
+
+rect.bar_container {
+    fill: black;
+    stroke: white;
+}
+
+rect#legend_container {
+    fill: black;
+    stroke: white;
+}
