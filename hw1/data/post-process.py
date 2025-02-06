@@ -12,7 +12,7 @@ from tqdm import tqdm
 from pprint import pp
 import re
 
-gmaps = googlemaps.Client(key='AIzaSyBRd-GJnghzCYXiHEZJ3bvXySphFYhUlk8')
+gmaps = googlemaps.Client(key='')
 
 def passes_filter(row):
     # Filter criteria:
