@@ -82,19 +82,18 @@
             Suspendisse potenti. Nam in enim nec lectus blandit vehicula.
         </p>
         <div id="treeDiv">
-            <svg id="mainTree" width="800" height="700" z-index="1"></svg>
+            <svg id="mainTree" width="800" height="700"></svg>
             <div>
-                <svg id="privateTree" width="400" height="400" z-index="0"></svg>
-                <svg id="nonPrivateTree" width="400" height="400" z-index="0"></svg>
+                <svg id="privateTree" width="400" height="400"></svg>
+                <svg id="nonPrivateTree" width="400" height="400"></svg>
             </div>
         </div>
         <script id="basicplot_script">
 
-            function basicTreePlots(id, dataFilterFunction, color, r) {
+            function basicTreePlots(id, dataFilterFunction, color, r, text) {
                 var svg = d3.select(`#${id}`);
                 var mapWidth = svg.attr("width");
                 var mapHeight = svg.attr("height");
-
                 var map = svg.append("g");
 
                 var basicPlotMaker = async function () {
@@ -112,7 +111,7 @@
                         .attr("d", path);
 
                     var weed = await d3.csv('data/Street_Tree_List-2022-01-30_FILTERED.csv', d3.autoType);
-                    weed = weed.filter( d=> dataFilterFunction(d))
+                    weed = weed.filter(d => dataFilterFunction(d))
                     weed.forEach(d => {
                         d.Position = projection([d.Longitude, d.Latitude]);
                     });
@@ -122,7 +121,7 @@
                         .attr("fill", color)
                         .attr("cx", d => d.Position[0])
                         .attr("cy", d => d.Position[1])
-                        .attr("opacity", 0.4)
+                        .attr("opacity", 0.4);
 
                     // Scale bar package created by Harry Stevens @ https://github.com/HarryStevens/d3-geo-scale-bar?tab=readme-ov-file
                     var scaleBar = d3.geoScaleBar()
@@ -132,17 +131,27 @@
                         .left(0.05)
                         .top(0.05)
                         .tickPadding(3)
+                        .distance(1)
+                        .tickValues([0, 0.5, 1]);
                     mapScaleBar = map.append("g")
-                                     .call(scaleBar);
+                        .call(scaleBar);
                     mapScaleBar.selectAll("rect")
-                               .remove();
+                        .remove();
+
+                    svg.append("text")
+                        .text(text)
+                        .attr("stroke", "black")
+                        .attr("stroke-width", "1px")
+                        .attr("x", mapWidth / 2)
+                        .attr("y", 25)
+                        .attr("text-anchor", "middle");
                 };
                 basicPlotMaker();
             };
 
-            basicTreePlots("mainTree", () => true, "#00573a", 1.5);
-            basicTreePlots("privateTree", d => d.qCaretaker === 'Private', "#572e00", 1);
-            basicTreePlots("nonPrivateTree", d => d.qCaretaker !== 'Private', "#572e00", 1);
+            basicTreePlots("mainTree", () => true, "#00573a", 1.5, "All Trees");
+            basicTreePlots("privateTree", d => d.qCaretaker === 'Private', "#572e00", 1, "Privately Owned");
+            basicTreePlots("nonPrivateTree", d => d.qCaretaker !== 'Private', "#572e00", 1, "Non-Privately Owned");
         </script>
 
         <h3>

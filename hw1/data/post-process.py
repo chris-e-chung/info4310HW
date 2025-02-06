@@ -12,7 +12,7 @@ from tqdm import tqdm
 from pprint import pp
 import re
 
-gmaps = googlemaps.Client(key='')
+gmaps = googlemaps.Client(key='AIzaSyCk888dpJ8hJfAV0vYrhH1AAnWNSKfT9hE')
 
 def passes_filter(row):
     # Filter criteria:
@@ -52,6 +52,8 @@ with open('Street_Tree_List-2022-01-30_RAW.csv','r') as f:
             # you might consider doing some additional processing here
             # e.g. splitting up qSpecies
             
+            pp(gmaps.reverse_geocode((row['Latitude'], row['Longitude'])))
+
             postal_code = find_postal(reversed(gmaps.reverse_geocode(
                 (row['Latitude'], row['Longitude']))[0]['address_components']))
             
