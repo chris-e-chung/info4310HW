@@ -29,7 +29,7 @@ a {
 } 
 
 header {
-    position: fixed;
+    position: absolute;
     align-items: center;
     max-width: 1920px;
 
@@ -99,32 +99,17 @@ div#treeDiv {
     align-items: center;
 } div#treeDiv > svg {
     margin-right: 50px;
-
-    max-height: 720px;
-    min-height: 610px;
-    max-width: 800px;
-    min-width:650px;
-    width: 100%;
-    height: 100%;
 } div#treeDiv div {
-    max-width: 420px;
-    max-height: 420px;
-    min-width: 390px;
-    min-height: 390px;
-
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-}
+} 
 
 svg {
     display: block;
     padding: 10px;
     margin-bottom: 20px;
-
-    width: 100%;
-    height: auto;
 
     border: 2px solid none;
     border-radius: 5px;
@@ -141,6 +126,10 @@ svg {
     fill: none;
     stroke: black;
     stroke-width: 1px;
+}
+
+.blue {
+    color: cornflowerblue;
 }
 
 footer {

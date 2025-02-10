@@ -60,57 +60,56 @@
     <main>
         <h2><em>Clever Title</em> : Visualizing S.F.'s Trees and Health Trends</h2>
         <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ultricies ut nisi tincidunt fermentum.
-            Pellentesque ac leo ut ante commodo pharetra at sed libero.
+            The goal of this basic website is to explore trends (or the absence of them) in a dataset of San Francisco's trees.
         </p>
         <p>
-            Phasellus vulputate diam diam, nec luctus neque varius vitae. Fusce malesuada venenatis varius. Pellentesque
-            rutrum metus nec sapien hendrerit commodo. Integer bibendum lobortis enim, sit amet pulvinar ex fringilla
-            non. Morbi gravida eget orci in convallis. Sed vestibulum ullamcorper venenatis. Suspendisse magna quam,
-            interdum sed luctus porta, lobortis et leo. Ut at bibendum felis. Sed augue tortor, sagittis vel felis ut,
-            consectetur gravida augue. Mauris venenatis pharetra sapien a sollicitudin. Pellentesque porta quam aliquam
-            magna mollis, a rhoncus metus tempus.
+            To supplement this analysis, we will also be visualizing two different datasets in addition to the trees:
+            <ul>
+                <li>Median Income</li>
+                <li>Asthma Hospitalization Rates</li>
+            </ul>
         </p>
         <hr>
         <h3>
             Basic Tree Plot
         </h3>
         <p>
-            Interdum et malesuada fames ac ante ipsum primis in faucibus. Nulla vel volutpat odio. Maecenas vestibulum
-            placerat dui ac vestibulum.
-            Aliquam semper, metus in faucibus viverra, quam enim placerat massa, vitae ultrices ligula metus in ipsum.
-            Suspendisse potenti. Nam in enim nec lectus blandit vehicula.
+            To start with, we will be looking at the distribution of trees based on whether or not they are privately
+             or non-privately (publicly) owned.
         </p>
         <div id="treeDiv">
-            <svg id="mainTree" width="800" height="700"></svg>
+            <svg id="mainTree" width="600" height="550"></svg>
             <div>
-                <svg id="privateTree" width="400" height="400"></svg>
-                <svg id="nonPrivateTree" width="400" height="400"></svg>
+                <svg id="privateTree" width="400" height="370"></svg>
+                <svg id="nonPrivateTree" width="400" height="370"></svg>
             </div>
         </div>
         <script id="basicplot_script">
+            var neighborhoods;
+            const jsonLoader = async function () {
+                var sf = await d3.json('data/SF-Neighborhoods.geo.json');
+                neighborhoods = topojson.feature(sf, sf.objects.SFNeighborhoods);
+                neighborhoods.features = neighborhoods.features.filter(d => !d.properties.name.includes("Island"));
+
+            };
 
             function basicTreePlots(id, dataFilterFunction, color, r, text) {
-                var svg = d3.select(`#${id}`);
-                var mapWidth = svg.attr("width");
-                var mapHeight = svg.attr("height");
-                var map = svg.append("g");
+                let svg = d3.select(`#${id}`);
+                let mapWidth = svg.attr("width");
+                let mapHeight = svg.attr("height") - 20;
+                let map = svg.append("g").attr("transform", `translate(0, 20)`);
 
-                var basicPlotMaker = async function () {
-                    var sf = await d3.json('data/SF-Neighborhoods.geo.json');
-                    console.log(sf);
-
-                    var neighborhoods = topojson.feature(sf, sf.objects.SFNeighborhoods);
-
-                    var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], neighborhoods);
-                    var path = d3.geoPath().projection(projection);
+                let basicPlotMaker = async function () {
+                    let projection = d3.geoMercator().fitSize([mapWidth, mapHeight], neighborhoods);
+                    let path = d3.geoPath().projection(projection);
 
                     map.selectAll("path.neighborhood").data(neighborhoods.features)
                         .join("path")
+                        .attr("name", d => d.properties.name)
                         .attr("class", "neighborhood")
                         .attr("d", path);
 
-                    var weed = await d3.csv('data/Street_Tree_List-2022-01-30_FILTERED.csv', d3.autoType);
+                    let weed = await d3.csv('data/Street_Tree_List-2022-01-30_FILTERED.csv', d3.autoType);
                     weed = weed.filter(d => dataFilterFunction(d))
                     weed.forEach(d => {
                         d.Position = projection([d.Longitude, d.Latitude]);
@@ -124,7 +123,7 @@
                         .attr("opacity", 0.4);
 
                     // Scale bar package created by Harry Stevens @ https://github.com/HarryStevens/d3-geo-scale-bar?tab=readme-ov-file
-                    var scaleBar = d3.geoScaleBar()
+                    let scaleBar = d3.geoScaleBar()
                         .projection(projection)
                         .size([mapWidth, mapHeight])
                         .units(d3.geoScaleMiles)
@@ -133,15 +132,14 @@
                         .tickPadding(3)
                         .distance(1)
                         .tickValues([0, 0.5, 1]);
-                    mapScaleBar = map.append("g")
+                    mapScaleBar = svg.append("g")
                         .call(scaleBar);
                     mapScaleBar.selectAll("rect")
                         .remove();
 
                     svg.append("text")
                         .text(text)
-                        .attr("stroke", "black")
-                        .attr("stroke-width", "1px")
+                        .attr("fill", "black")
                         .attr("x", mapWidth / 2)
                         .attr("y", 25)
                         .attr("text-anchor", "middle");
@@ -149,10 +147,21 @@
                 basicPlotMaker();
             };
 
-            basicTreePlots("mainTree", () => true, "#00573a", 1.5, "All Trees");
-            basicTreePlots("privateTree", d => d.qCaretaker === 'Private', "#572e00", 1, "Privately Owned");
-            basicTreePlots("nonPrivateTree", d => d.qCaretaker !== 'Private', "#572e00", 1, "Non-Privately Owned");
+            (async function () {
+                await jsonLoader();
+                basicTreePlots("mainTree", () => true, "#00573a", 1.5, "All Trees");
+                basicTreePlots("privateTree", d => d.qCaretaker === 'Private', "#572e00", 1, "Privately Owned");
+                basicTreePlots("nonPrivateTree", d => d.qCaretaker !== 'Private', "#572e00", 1, "Non-Privately Owned");
+            })();
+
         </script>
+        <p>
+            We see here that privately trees are far greater in their distribution in the city when compared to non-private ones.
+            Additionally, public trees are mainly concentrated <em>linearly</em>, which is what we would expect if the roads of 
+            the city were straight lines (<a href="https://youtu.be/5ZwbZWrKbGI?si=jeg8WpnOHlBrrkfp" class="blue">This video</a> outlines why straight lines aren't the best for cities, though)
+        </p>
+
+        <hr>
 
         <h3>
             Basic Tree Plot
@@ -163,6 +172,9 @@
             Aliquam semper, metus in faucibus viverra, quam enim placerat massa, vitae ultrices ligula metus in ipsum.
             Suspendisse potenti. Nam in enim nec lectus blandit vehicula.
         </p>
+
+        <svg width="700" height="620"></svg>
+
 
     </main>
 
