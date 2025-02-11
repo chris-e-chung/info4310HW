@@ -6,7 +6,7 @@
     "translate": [-122.517747, 37.707763]
   },
   "objects": {
-    "ZipCodes": {
+    "SanFrancisco.Neighborhoods": {
       "type": "GeometryCollection",
       "geometries": [
         {
