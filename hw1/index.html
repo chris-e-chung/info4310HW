@@ -104,32 +104,72 @@
             Additionally, since plants are generally considered to be boons to air quality and health, it might be interesting to 
             see if we can view a connection between asthma hospitalization rates (since it is a breathing/lung condition) and tree data.
         </p>
-        <p>To start with, we'll simply visualize these two datasets on a map of SF.</p>
+        <p>To start with, we'll simply visualize these two datasets on a map of SF, with trees added on top.</p>
 
         <div class="income_asthma">
             <div class="mapandlegend">
                 <svg id="income" width="500" height="450"></svg>
-                <svg id="incomeLegend" width="400" height="100"></svg>
+                <svg id="incomeLegend" width="400" height="50"></svg>
             </div>
             
             <div class="mapandlegend">
                 <svg id="asthma" width="500" height="450"></svg>
-                <svg id="asthmaLegend" width="300" height="100"></svg>
+                <svg id="asthmaLegend" width="300" height="50"></svg>
             </div>
         </div>
+
+        <p>
+        We used Prof. Rz.'s legend maker code to simplify things, here.
+        </p>
+        <p>With just dots on the map, it is a bit difficult to make out whether or not there are truly more trees at places with higher median incomes or rates of asthma hospitalization.</p>
+        <p>Let's try graphing the counts!</p>
+
+        <hr>
+
+        <h3>Bar Chart</h3>
+        <p>
+            The green bars in the following chart represent the number of trees, numerated by the left axis. The blue bars represent rates of emergency room asthma visits to hospitals, numerated by the right axis. 
+            Here, we only chart trees and asthma, leaving out income, as a three-axis bar chart would be confusing, and I'd like a single bar chart on the page without the need to scroll.
+        </p>
+        <svg id="barChart" width="1000" height="700"></svg>
+        <p>
+            As we can see, as the number of trees in a given zip code decrease, we don't necessarily see a predictable decrease or increase in hospitalizations, though it is true that
+            some of the higher numbers are on the right of the chart. If I had a little more time today, I would add some labels to the right and left axis, however, <a href="https://store.steampowered.com/app/1295660/Sid_Meiers_Civilization_VII/">Sid Meier's Civilization VII</a> is releasing today, and thus leaves me with little time.
+        </p>
 
     </main>
     <script id="basicplot_script">
         var neighborhoods;
         var zipCodes;
+        var weed;
+        var treeZip = {};
+        var income;
+        var asthma;
         const jsonLoader = async function () {
             var sf = await d3.json('data/SF-Neighborhoods.geo.json');
             neighborhoods = topojson.feature(sf, sf.objects.SFNeighborhoods);
             neighborhoods.features = neighborhoods.features.filter(d => !d.properties.name.includes("Island"));
 
             var zipsf = await d3.json('data/ZipCodes1.topojson');
-            console.log(zipsf)
             zipCodes = topojson.feature(zipsf, zipsf.objects['SanFrancisco.Neighborhoods']);
+
+            weed = await d3.csv('data/Street_Tree_List-2022-01-30_FILTERED.csv', d3.autoType);
+            weed.forEach( tree => {
+                if (tree.PostalCode in treeZip) {
+                    treeZip[tree.PostalCode] += 1;
+                } else {
+                    treeZip[tree.PostalCode] = 1;
+                };
+            });
+
+            let csv = await d3.csv('data/Census_Median_Income-2022_FILTERED.csv', d3.autoType);
+            income = csv[0];
+            for (zip in income) {
+                income[zip] = parseInt(income[zip].replace(/\D+/g, ''))
+            }
+            asthma = csv[1];
+
+            treeZip = Object.fromEntries(Object.entries(treeZip).filter(([key, value]) => value > 300));            
         };
 
         function basicTreePlots(id, dataFilterFunction, color, r, text) {
@@ -148,12 +188,12 @@
                     .attr("class", "neighborhood")
                     .attr("d", path);
 
-                let weed = await d3.csv('data/Street_Tree_List-2022-01-30_FILTERED.csv', d3.autoType);
-                weed = weed.filter(d => dataFilterFunction(d))
-                weed.forEach(d => {
+
+                weedCopy = structuredClone(weed).filter(d => dataFilterFunction(d))
+                weedCopy.forEach(d => {
                     d.Position = projection([d.Longitude, d.Latitude]);
                 });
-                map.selectAll('circle').data(weed)
+                map.selectAll('circle').data(weedCopy)
                     .join("circle")
                     .attr("r", r)
                     .attr("fill", color)
@@ -204,6 +244,18 @@
                 .attr("stroke-width", "0.5px")
                 .attr("d", path);
 
+            weed.forEach(d => {
+                d.Position = projection([d.Longitude, d.Latitude]);
+            });
+            map.selectAll('circle').data(weed)
+                .join("circle")
+                .attr("r", 1)
+                .attr("fill", "black")
+                .attr("cx", d => d.Position[0])
+                .attr("cy", d => d.Position[1])
+                .attr("opacity", 0.2);
+            
+
             // Scale bar package created by Harry Stevens @ https://github.com/HarryStevens/d3-geo-scale-bar?tab=readme-ov-file
             let scaleBar = d3.geoScaleBar()
                     .projection(projection)
@@ -229,26 +281,106 @@
             drawLegend(`#${id}Legend`, scale);
         }
 
+        function barGraph() {
+            const graph = d3.select("svg#barChart");
+            const width = graph.attr("width");
+            const height = graph.attr("height");
+            const margin = {top: 10, right: 50, bottom: 50, left: 50};
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+        
+            let annotations = graph.append("g").attr("id","annotations");
+            let chartArea = graph.append("g").attr("id","points")
+                            .attr("transform",`translate(${margin.left},${margin.top})`);
+
+            sortedTrees = Object.keys(treeZip).sort( (a, b) => treeZip[b] - treeZip[a]);
+            sortedTrees = sortedTrees.filter(zip => asthma[zip] > 0);
+            treeMax = d3.max(Object.values(treeZip))
+            asthmaMax = d3.max(Object.values(asthma))
+
+            let treeScale = d3.scaleLinear().domain([0, treeMax]).range([chartHeight, 0]);
+            console.log(asthma)
+            let asthmaScale = d3.scaleLinear().domain([0, asthmaMax]).range([chartHeight, 0]);
+
+            let leftAxis = d3.axisLeft(treeScale);
+            let leftGridlines = d3.axisLeft(treeScale)
+                                  .ticks(10)
+                                  .tickSize(-chartWidth-10)
+                                  .tickFormat("")
+            annotations.append("g")
+                        .attr("class", "y axis")
+                        .attr("transform",`translate(${margin.left-10},${margin.top})`)
+                        .call(leftAxis)
+            annotations.append("g")
+                        .attr("class", "y gridlines")
+                        .attr("transform",`translate(${margin.left-10},${margin.top})`)
+                        .call(leftGridlines);
+
+            const xScale = d3.scaleBand()
+                             .domain(sortedTrees)
+                             .range([0, chartWidth])
+                             .padding(0.2);
+
+            bottomAxis = d3.axisBottom(xScale);
+            annotations.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", `translate(${margin.left-10},${margin.top + chartHeight})`)
+                    .call(bottomAxis)
+                    .selectAll("text")
+                    .attr("transform", "rotate(-45)")
+                    .attr("text-anchor", "end");
+
+
+            rightAxis = d3.axisRight(asthmaScale);
+            let rightGridlines = d3.axisRight(asthmaScale)
+                                   .ticks(10)
+                                   .tickSize(-chartWidth-10)
+                                   .tickFormat("");
+            annotations.append("g")
+                        .attr("class", "y axis")
+                        .attr("transform",`translate(${margin.left + chartWidth},${margin.top})`)
+                        .call(rightAxis)
+            annotations.append("g")
+                        .attr("class", "y gridlines")
+                        .attr("transform",`translate(${margin.left + chartWidth},${margin.top})`)
+                        .call(rightGridlines);
+
+            chartArea.selectAll(".treeBars").data(sortedTrees).join("rect")
+                    .attr("class", "treeBars")
+                    .attr("x", d => xScale(d))
+                    .attr("y", d => treeScale(treeZip[d]))
+                    .attr("width", xScale.bandwidth() / 2)
+                    .attr("height", d => chartHeight - treeScale(treeZip[d]))
+                    .attr("fill", "green");
+
+            asthmaKeys = Object.keys(asthma).filter(d => sortedTrees.includes(d));
+            console.log(asthmaKeys)
+            chartArea.selectAll(".asthmaBars").data(asthmaKeys).join('rect')
+                    .attr("class", "asthmaBars")
+                    .attr("zip", d => d)
+                    .attr("x", d => xScale(d) + xScale.bandwidth() / 2)                    
+                    .attr("y", d => asthmaScale(asthma[d]))
+                    .attr("width", xScale.bandwidth() / 2)
+                    .attr("height", d => chartHeight - asthmaScale(asthma[d]))
+                    .attr("fill", "blue");
+
+        }
+
         (async function () {
             await jsonLoader();
             basicTreePlots("mainTree", () => true, "#00573a", 1.5, "All Trees");
             basicTreePlots("privateTree", d => d.qCaretaker === 'Private', "#572e00", 1, "Privately Owned");
             basicTreePlots("nonPrivateTree", d => d.qCaretaker !== 'Private', "#572e00", 1, "Non-Privately Owned");
 
-            let csv = await d3.csv('data/Census_Median_Income-2022_FILTERED.csv', d3.autoType);
-            let income = csv[0];
-            for (zip in income) {
-                income[zip] = parseInt(income[zip].replace(/\D+/g, ''))
-            }
             let incomeScale = d3.scaleLinear().domain(d3.extent(Object.values(income)))
                                               .range([d3.rgb('#D3D3D3'), d3.rgb('#0033FF')]);
 
-            let asthma = csv[1];
-            console.log(d3.extent(Object.values(asthma)))
             let asthmaScale = d3.scaleLinear().domain(d3.extent(Object.values(asthma)))
                                               .range([d3.rgb('#D3D3D3'), d3.rgb('#C00000')]);
-            zipCodeMaps("income", income, incomeScale, 'Median Income');
-            zipCodeMaps("asthma", asthma, asthmaScale, 'Asthma');
+            zipCodeMaps("income", income, incomeScale, 'Median Income', true);
+            zipCodeMaps("asthma", asthma, asthmaScale, 'Asthma', true);
+
+            barGraph();
         })();
 
     </script>
@@ -410,81 +542,6 @@
     </script>
 
 <!-- <script>
-     
-     const createMap = (svgId, countData, scaleColor) => {
-                const mapsvg = d3.select(svgId);
-                const mapWidth = mapsvg.attr("width");
-                const mapHeight = mapsvg.attr("height");
-                const mapMargin = { top: 20, right: 20, bottom: 100, left: 20 };
-                const mapAreaWidth = mapWidth - mapMargin.left - mapMargin.right;
-                const mapAreaHeight = mapHeight - mapMargin.top - mapMargin.bottom;
-                const map = mapsvg.append("g")
-                    .attr("transform", "translate(" + mapMargin.left + "," + mapMargin.top + ")");
-                return { mapsvg, mapAreaWidth, mapAreaHeight, map };
-            };
-
-            const requestMaps = async function () {
-                console.log('load data');
-                const sf = await d3.json("data/SF-Neighborhoods.geo.json");
-                const treeCounts = await d3.json("data/exported_tree_counts.json");
-                const crimeCounts = await d3.json("data/exported_crime_data.json");
-
-                let neighborhoods = topojson.feature(sf, sf.objects.SFNeighborhoods);
-
-                const drawMap = (svgId, countData, scaleColor, legendLabel) => {
-
-                    let { mapAreaWidth, mapAreaHeight, map } = createMap(svgId, countData, scaleColor);
-                    let countMap = new Map(countData.map(d => [d.neighborhood, d.count]));
-
-                    neighborhoods.features.forEach(feature => {
-                        let neighborhoodName = feature.properties.name;
-                        feature.properties.count = countMap.get(neighborhoodName) || 0;
-                    });
-
-                    let projection = d3.geoAlbersUsa().fitSize([mapAreaWidth, mapAreaHeight], neighborhoods);
-                    let path = d3.geoPath().projection(projection);
-
-                    const minCount = d3.min(countData, d => d.count);
-                    const maxCount = d3.max(countData, d => d.count);
-                    const colorScale = d3.scaleSequentialLog([minCount, maxCount], scaleColor);
-
-                    map.selectAll("path")
-                        .data(neighborhoods.features)
-                        .enter().append("path")
-                        .attr("d", path)
-                        .attr("fill", d => colorScale(d.properties.count || 0))
-                        .attr("stroke", "#000")
-                        .attr("stroke-width", 0.5);
-
-                    const legendWidth = 250;
-                    const legendHeight = 10;
-
-                    // add the legend
-                    const legendSvg = d3.select(svgId)
-                        .append("g")
-                        .attr("class", "legend")
-                        .attr("stroke", "black")
-                        .attr("stroke-width", 1)
-                        .attr("transform", `translate(${(mapAreaWidth - legendWidth) / 2}, ${mapAreaHeight + 50})`);
-
-                    const legend = d3.legendColor()
-                        .shapeWidth(legendWidth / 5)
-                        .orient("horizontal")
-                        .scale(colorScale)
-                        .title(legendLabel)
-                        .labelFormat(d3.format(".0f"))
-                        .cells(5)
-                        .labelAlign("middle");
-
-
-                    legendSvg.call(legend);
-
-                };
-                drawMap("#treeChoropleth", treeCounts, d3.interpolateGreens, "Tree Density");
-                drawMap("#crimeChoropleth", crimeCounts, d3.interpolateBlues, "Crime Density");
-
-
-
                 // filter data for bar chart
                 // remove neighborhoods with <5000 crimes
                 const filteredTreeCounts = treeCounts.filter(d => d.count >= 0);

@@ -133,12 +133,23 @@ svg {
     display:flex;
     flex-direction: row;
     justify-content: space-between;
-} .income_asthma * {
+} .mapandlegend {
     display:flex;
     flex-direction: column;
-    justify-content: center;
+} .mapandlegend * {
+    margin: 0 auto;
 }
 
+#textMargin {
+    margin: 100px 0px;
+}
+
+#barChart {
+    margin: 0 auto;
+}
+.gridlines .domain {
+    display: none;
+}
 
 footer {
     height: 300px;
